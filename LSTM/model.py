@@ -33,7 +33,54 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
     with tf.name_scope('attention_layer'):
     #using scan
     #TODO
+        memory = tf.concat([initial_state,lstm1_outputs],1)
+        #memory: [batch_size, num_steps, state_size]
+        W_key = tf.get_variable('W_key', [lstm_hidden_dim_1, lstm_hidden_dim_1])
+        b_key = tf.get_variable('b_key', [lstm_hidden_dim_1], initializer=tf.constant_initializer(0.0))
+
+        W_memory_selection_1 = tf.get_variable('W_memory_selection_1', [lstm_hidden_dim_1, lstm_hidden_dim_1])
+        b_memory_selection_1 = tf.get_variable('b_memory_selection_1', [lstm_hidden_dim_1], initializer=tf.constant_initializer(0.0))
+
+        W_memory_selection_2 = tf.get_variable('W_memory_selection_2', [lstm_hidden_dim_1, lstm_hidden_dim_1])
+        b_memory_selection_2 = tf.get_variable('b_memory_selection_2', [lstm_hidden_dim_1], initializer=tf.constant_initializer(0.0))
+
+        def step(time_step):
+            """
+            args:
+            timestep:from 0 to the last time step
+            """
+            current_hidden = memory[:,time_step+1,:]
+            previous_hidden = memory[:,:time_step+1,:]
+            #previous_hidden: [batch_size, num_steps, state_size]
+
+            memory_selection_1 = tf.sigmoid(tf.matmul(current_hidden,W_memory_selection_1) + b_memory_selection_1)
+            memory_selection_2 = tf.sigmoid(tf.matmul(current_hidden,W_memory_selection_2) + b_memory_selection_2)
+            #memory selection: [batch_size, state_size]
+            key = tf.matmul(current_hidden,W_key) + b_key
+            #key: [batch_size, state_size]
+
+            memory_selection_1_as_matrices = tf.expand_dims(memory_selection_1,1)
+            similarity_temp = tf.multiply(previous_hidden,memory_selection_1_as_matrices) 
+            key_as_matrices = tf.expand_dims(key,2)
+            similarity = tf.batch_matmul(similarity_temp, key_as_matrices)
+            #similarity = [batch_size, num_steps]
+            weight = tf.nn.softmax(similarity)
+            weight_pad = 
+
+            
+
+
+
+
+        rnn_outputs, final_states = \
+            tf.scan(lambda a, x: cell(x, a[1]),
+                    tf.transpose(rnn_inputs, [1,0,2]),
+                    initializer=(tf.zeros([batch_size, state_size]), init_state))
         att_outputs
+
+
+
+
     with th.name_scope('merge_layer'):
         if merge_mode == 'concat':
             att_lstm_outputs = tf.concat([lstm1_outputs,att_outputs],2)
