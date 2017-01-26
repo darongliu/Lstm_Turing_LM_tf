@@ -44,7 +44,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
         W_memory_selection_2 = tf.get_variable('W_memory_selection_2', [lstm_hidden_dim_1, lstm_hidden_dim_1])
         b_memory_selection_2 = tf.get_variable('b_memory_selection_2', [lstm_hidden_dim_1], initializer=tf.constant_initializer(0.0))
 
-        def step(time_step):
+        def step(_,time_step):
             """
             args:
             timestep:from 0 to the last time step
@@ -80,15 +80,12 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
             return attention, weight_pad, entropy
 
         time_step_sequence = tf.range(0,tf.shape(input_x)[2])
+        initializer = [tf.zeros([tf.shape(input_x)[0], lstm_hidden_dim_1]),
+                       tf.zeros_like(input_x),
+                       tf.zeros([tf.shape(input_x)[0],])]
 
-        att_outputs, weight_outputs = \
-            tf.scan(lambda a, x: cell(x, a[1]),
-                    tf.transpose(rnn_inputs, [1,0,2]),
-                    initializer=(tf.zeros([batch_size, state_size]), init_state))
-        att_outputs
-
-
-
+        att_outputs, weight_outputs, entropy_outputs = \
+            tf.scan(step,time_step_sequence,initializer=initializer)
 
     with th.name_scope('merge_layer'):
         if merge_mode == 'concat':
@@ -122,14 +119,24 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
 
         logits = tf.matmul(att_lstm_outputs, W) + b
 
-    with tf.name_scope('entropy_loss') :
-
+    #with tf.name_scope('entropy_loss') :
+    #dropout, no num_classes
 
     return logits
 
-def loss() :
-    total_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits, y_reshaped))
+def loss(logits, labels, entropy=None, entropy_reg=0) :
+    label_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits, y_reshaped))
 
-def training() :
+def training(loss, learning_rate) :
+    # Add a scalar summary for the snapshot loss.
+    tf.summary.scalar('loss', loss)
+    # Create the gradient descent optimizer with the given learning rate.
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    # Create a variable to track the global step.
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    # Use the optimizer to apply the gradients that minimize the loss
+    # (and also increment the global step counter) as a single training step.
+    train_op = optimizer.minimize(loss, global_step=global_step)
+    return train_op
 
-def evaluation() :
+def evaluation(logits, labels) :
