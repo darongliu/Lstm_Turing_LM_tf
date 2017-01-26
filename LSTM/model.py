@@ -65,14 +65,23 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
             similarity = tf.batch_matmul(similarity_temp, key_as_matrices)
             #similarity = [batch_size, num_steps]
             weight = tf.nn.softmax(similarity)
-            weight_pad = 
+            entropy_temp = -tf.multiply(weight,tf.log(weight))
+            entropy = tf.reduce_sum(entropy_temp,1)
 
-            
+            weight_pad_length = tf.shape(input_x)[1] - time_step - 1
+            weight_pad = tf.concat([weight,tf.zeros([tf.shape(input_x)[0],weight_pad_length])],1) #for weight visualization
 
+            memory_selection_2_as_matrices = tf.expand_dims(memory_selection_2,1)
+            attention_temp = tf.multiply(previous_hidden,memory_selection_2_as_matrices) 
+            weight_as_matrics = tf.expand_dims(weight,1)
+            attention = tf.batch_matmul(weight_as_matrics, previous_hidden)
+            attention = tf.squeeze(attention,[1])
 
+            return attention, weight_pad, entropy
 
+        time_step_sequence = tf.range(0,tf.shape(input_x)[2])
 
-        rnn_outputs, final_states = \
+        att_outputs, weight_outputs = \
             tf.scan(lambda a, x: cell(x, a[1]),
                     tf.transpose(rnn_inputs, [1,0,2]),
                     initializer=(tf.zeros([batch_size, state_size]), init_state))
@@ -112,6 +121,9 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
         b = tf.get_variable('b', [num_classes], initializer=tf.constant_initializer(0.0))
 
         logits = tf.matmul(att_lstm_outputs, W) + b
+
+    with tf.name_scope('entropy_loss') :
+
 
     return logits
 
