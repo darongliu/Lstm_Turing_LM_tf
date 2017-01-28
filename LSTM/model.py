@@ -113,19 +113,36 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
         lstm2_outputs, final_state = tf.nn.dynamic_rnn(cell, att_lstm_outputs, initial_state=initial_state)
         att_lstm_outputs = lstm2_outputs
 
-    with tf.name_scope('softmax'):
+    with tf.name_scope('output_linear'):
         W = tf.get_variable('W', [lstm_hidden_dim_2, num_classes])
         b = tf.get_variable('b', [num_classes], initializer=tf.constant_initializer(0.0))
 
         logits = tf.matmul(att_lstm_outputs, W) + b
 
     #with tf.name_scope('entropy_loss') :
-    #dropout, no num_classes
+    #dropout, no num_classes pretrain
 
     return logits
 
 def loss(logits, labels, entropy=None, entropy_reg=0) :
-    label_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits, y_reshaped))
+    """
+    args:
+        logits: [batch_size, num_steps, vocab_size]
+        labels: [batch_size, num_steps]
+
+    return :
+        label_loss: for calculating perplexity
+        loss: for training
+
+    evaluate perplexity: exp(average of the entropy per word)
+    """
+    label_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits))
+    if entropy :
+        loss = label_loss + entropy_reg*entropy
+    else :
+        loss = label_loss
+
+    return label_loss, loss
 
 def training(loss, learning_rate) :
     # Add a scalar summary for the snapshot loss.
@@ -139,4 +156,7 @@ def training(loss, learning_rate) :
     train_op = optimizer.minimize(loss, global_step=global_step)
     return train_op
 
-def evaluation(logits, labels) :
+
+
+
+

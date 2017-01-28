@@ -10,7 +10,7 @@ import numpy as np
 from random import shuffle
 
 class data: 
-    def __init__(self, data_dir, batch_size=100, min_seq_length=10, max_seq_length=50, min_count=2, shuffling=False):
+    def __init__(self, data_dir, batch_size=100, min_seq_length=10, max_seq_length=50, min_count=2):
         self.train_file = os.path.join(data_dir, 'train.txt' )
         self.valid_file = os.path.join(data_dir, 'valid.txt' )
         self.test_file  = os.path.join(data_dir, 'test.txt'  )
