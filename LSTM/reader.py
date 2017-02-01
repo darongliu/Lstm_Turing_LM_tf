@@ -1,10 +1,15 @@
-"""parsing text file"""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+""" 
+modifier: Da-Rong Liu
+Date: 2/01/2017
+In this implementation, sentences of the same length are put into one bucket.
+This helps to avoid doing padding.
+
+Refenrence: https://github.com/ketranm/RMN/blob/master/text/TextProcessor.lua
+"""
 
 import collections
 import os
+import sys
 import pickle
 import numpy as np
 from random import shuffle
@@ -21,13 +26,15 @@ class data:
         self.min_seq_length = min_seq_length
         self.max_seq_length = max_seq_length
 
-        self.x = self.y = self.nstep = self.all_classified_data = None
+        self.x = self.y = self.nbatch = self.all_tensor_data = None
 
         if not (os.path.exists(vocab_file)):
             print('vocab_file do not exist. Establishing vocab_file...')
             self.vocab_to_id = self.establish_vocab()
         else :
+            print('loading vocab_file...')
             self.vocab_to_id = pickle.load(self.vocab_file)
+        self.vocab_size = len(self.vocab_to_id)
 
     def load(mode):
     if mode == 'train': 
@@ -40,11 +47,12 @@ class data:
         print('loading test text file...')
         data = self.read_data(self.test_file)
     else:
-        print('mode can only be train, valid, or test')
+        print('mode must be train, valid, or test')
+        sys.exit()
 
-    buckets = self.create_buckets(self.min_seq_length, self.max_seq_length,data)
-    self.all_classified_data = self.generate_classified_data(buckets, self.vocab_to_id, self.min_seq_length, self.max_seq_length, data)
-    self.x, self.y, self.nbatch = self.generate_batch()
+    buckets = self.create_buckets(self.min_seq_length, self.max_seq_length, data)
+    self.all_tensor_data = self.text_to_tensor(buckets, self.vocab_to_id, self.min_seq_length, self.max_seq_length, data)
+    self.x, self.y, self.nbatch = self.generate_batch(self.batch_size, self.all_tensor_data)
 
     def get_data(index) :
         if not self.x :
@@ -64,12 +72,12 @@ class data:
             print "still not load data"
         else :
             print "shuffling data"
-            self.x, self.y, self.nstep = self.generate_batch()
+            self.x, self.y, self.nstep = self.generate_batch(self.batch_size, self.all_tensor_data)
 
     """ -------STATIC METHOD------- """     
     def establish_vocab():
         print('loading train text file...')
-        train_data = read_data(self.train_file)
+        train_data = self.read_data(self.train_file)
 
         all_words = []
         for sentence in train_data :
@@ -78,13 +86,13 @@ class data:
 
         print('creating vocabulary mapping...')
         vocab_to_id = {}
-        counter = collections.Counter(all_words)
-        count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
+        counter = collections.Counter(all_words) #counter: dict {vocab:times}
+        count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0])) #sort by ascending
         for word, count in count_pairs :
             if count >= self.min_count :
                 vocab_to_id[word] = len(vocab_to_id)
 
-        special_words = {"<s>", "</s>", "<unk>"}
+        special_words = {"<unk>"} #used for any unknown words
         for special_word in special_words:
             if special_word not in vocab_to_id :
                 vocab_to_id[special_word] = len(vocab_to_id)
@@ -97,9 +105,16 @@ class data:
     def read_data(filename):
         with open(filename, "r") as f:
             content = f.readlines()
-        return ["<s> "+line+" </s>" for line in content]
+        return content
+        #add <s> and </s> at both end of the sentences
+        #return ["<s> "+line+" </s>" for line in content]
 
     def create_buckets(min_length, max_length, data) :
+        """
+        count the number of each length of the sentences
+        data: list of sentences
+        buckets: dict {length: number}
+        """
         buckets = {}
         for line in data :
             words = line.split()
@@ -111,7 +126,11 @@ class data:
                     buckets[length] = 1
         return buckets
 
-    def generate_classified_data(buckets, vocab_to_id, min_length, max_length, data) :
+    def text_to_tensor(buckets, vocab_to_id, min_length, max_length, data) :
+        """
+        transform text data to tensor format
+        all_data: dict {length: the tensor of the length}
+        """
         all_data = {}
         all_data_count = {}
         for length, sentence_count in buckets :
@@ -134,20 +153,23 @@ class data:
 
         return all_data
 
-    def generate_batch():
+    def generate_batch(batch_size, all_tensor_data):
+        """
+        transform all tensor data into batch form
+        """
         all_data = {}
-        for length, tensor in self.all_classified_data :
-            all_data[length] = np.random.shuffle(self.all_classified_data[length])
+        for length, tensor in all_tensor_data:
+            all_data[length] = np.random.shuffle(all_tensor_data[length])
 
         all_batch = []
         for length, tensor in all_data:
             sentence_num = tensor.shape[0]
-            batch_num    = sentence_num // self.batch_size
-            remaining = sentence_num - batch_num*self.batch_size
+            batch_num    = sentence_num // batch_size
+            remaining = sentence_num - batch_num*batch_size
             for i in range(batch_num) :
-                all_batch.append(all_data[length][i*self.batch_size:(i+1)*self.batch_size,:])
+                all_batch.append(all_data[length][i*batch_size:(i+1)*batch_size,:])
             if remaining :
-                all_batch.append(all_data[length][batch_num*self.batch_size:,:])
+                all_batch.append(all_data[length][batch_num*batch_size:,:])
 
         all_shuffle_batch = shuffle(all_batch)
 
