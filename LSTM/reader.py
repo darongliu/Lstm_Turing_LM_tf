@@ -13,6 +13,7 @@ import sys
 import pickle
 import numpy as np
 from random import shuffle
+import gensim
 
 class data: 
     def __init__(self, data_dir, batch_size=100, min_seq_length=10, max_seq_length=50, min_count=2):
@@ -47,7 +48,7 @@ class data:
         print('loading test text file...')
         data = self.read_data(self.test_file)
     else:
-        print('mode must be train, valid, or test')
+        print('mode must be train, valid, or test...')
         sys.exit()
 
     buckets = self.create_buckets(self.min_seq_length, self.max_seq_length, data)
@@ -56,22 +57,22 @@ class data:
 
     def get_data(index) :
         if not self.x :
-            print "still not load data"
+            print "still not load data..."
             return None
         else :
             return [self.x[index], self.y[index]]
 
     def get_batch_number() :
         if not self.nbatch :
-            print "still not load data"
+            print "still not load data..."
             return None
         return self.nbatch
 
     def shuffling_data():
         if not self.x :
-            print "still not load data"
+            print "still not load data..."
         else :
-            print "shuffling data"
+            print "shuffling data..."
             self.x, self.y, self.nstep = self.generate_batch(self.batch_size, self.all_tensor_data)
 
     """ -------STATIC METHOD------- """     
@@ -178,3 +179,26 @@ class data:
         num = len(all_shuffle_batch)
 
         return x, y, num
+
+    def generate_word_embedding_matrix(vocab_to_id, path):
+        """
+        generate vocab lookup embedding matrix from pretrained word2vector
+        args:
+            vocab_to_id:
+            path: model path
+        return:
+            embedding_matrix: pretrained word embedding matrix
+        """
+        model = gensim.models.Word2Vec.load_word2vec_format(path, binary=True)
+        all_vocab_vector = []
+        for word, idx in vocab_to_id:
+            try:
+                word_vector = model[word]
+            except:
+                word_vector = np.zeros([300],dtype='float32')
+            all_vocab_vector.append(word_vector)
+
+        embedding_matrix = np.concatenate9all_vocab_vector,axis=0)
+        return embedding_matrix
+
+

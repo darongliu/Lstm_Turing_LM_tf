@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None) :
+def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None,vocab_size) :
     """
     Args:
     input_x: 2D tensor batch_size X time_step
@@ -113,14 +113,15 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None)
         lstm2_outputs, final_state = tf.nn.dynamic_rnn(cell, att_lstm_outputs, initial_state=initial_state)
         att_lstm_outputs = lstm2_outputs
 
-    with tf.name_scope('output_linear'):
-        W = tf.get_variable('W', [lstm_hidden_dim_2, num_classes])
-        b = tf.get_variable('b', [num_classes], initializer=tf.constant_initializer(0.0))
+    with tf.name_scope('output_lstm_linear'):
+        W = tf.get_variable('W', [lstm_hidden_dim_2, vocab_size],name="w")
+        b = tf.get_variable('b', [vocab_size], initializer=tf.constant_initializer(0.0),name="b")
 
         logits = tf.matmul(att_lstm_outputs, W) + b
 
     #with tf.name_scope('entropy_loss') :
-    #dropout, no num_classes pretrain
+    #dropout, pretrain
+    #add pretrain_param, output_linear_param
 
     return logits
 
@@ -136,11 +137,12 @@ def loss(logits, labels, entropy=None, entropy_reg=0) :
 
     evaluate perplexity: exp(average of the entropy per word)
     """
-    label_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits))
+    cross_entropy_result = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
+    label_loss = tf.reduce_sum(cross_entropy_result)
+    #devide vocab size
+    loss = tf.reduce_mean(cross_entropy_result)
     if entropy :
         loss = label_loss + entropy_reg*entropy
-    else :
-        loss = label_loss
 
     return label_loss, loss
 
