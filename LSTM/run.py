@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import time
 import argparse
 
@@ -10,6 +6,7 @@ import tensorflow as tf
 
 import reader
 from model import *
+
 def parsing_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, default='train',
@@ -21,8 +18,6 @@ def parsing_args():
 
     parser.add_argument('--data_dir', type=str, default='data/',
                         help='data directory containing train valid test data')
-    parser.add_argument('--log_file', type=str, default='logs',
-                        help='directory containing tensorboard logs')
     parser.add_argument('--save', type=str, default='save',
                         help='directory to store checkpointed models')
     parser.add_argument('--load', type=str, default=None,
@@ -30,9 +25,9 @@ def parsing_args():
     parser.add_argument('--att_file', type=str, default='save',
                         help='file storing attention weights for analysis')
 
-    parser.add_argument('--rnn_size', type=int, default=200,
+    parser.add_argument('--rnn_size', type=int, default=300,
                         help='size of LSTM internal state')
-    parser.add_argument('--emb_size', type=int, default=200,
+    parser.add_argument('--emb_size', type=int, default=300,
                         help='word embedding size')
     parser.add_argument('--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
@@ -147,6 +142,7 @@ def train(args):
     input_data = tf.placeholder(tf.int32, [None, None])
     targets    = tf.placeholder(tf.int32, [None, None])
     learning_rate_op = tf.placeholder(tf.float32, [])
+    dropout = tf.placeholder(tf.float32)
     #build model
     vocab_size=train_data.vocab_size
     predict, pretrain_param, output_linear_param = model.inference(input_data, 
@@ -170,19 +166,21 @@ def train(args):
         lstm_linear_b = tf.variable(tf.random_uniform([vocab_size], 0, 0),name='output_lstm_linear/b')
         init_att_w = output_linear_param['w'].assign(tf.concat([lstm_linear_w,lstm_linear_w],0))
         init_att_b = output_linear_param['b'].assign(lstm_linear_b)
-        saver = tf.train.Saver(pretrain_param)
+        saver_restore = tf.train.Saver(pretrain_param)
     else:
-        saver = tf.train.Saver()
+        saver_restore = tf.train.Saver()
     init = tf.initialize_all_variables()
+    saver_save = tf.train.Saver()
+    global_step = tf.Variable(0,name='global_step',trainable=False)
 
     with tf.Session() as sess:
         sess.run(init)
         if args.init_method == 'lstm':
-            saver.restore(sess, args.init_from)
+            saver_restore.restore(sess, args.init_from)
             sess.rum(init_att_w)
             sess.rum(init_att_b)
         else:
-            saver.restore(sess, args.init_from)
+            saver_restore.restore(sess, args.init_from)
 
         #training
         best_val_perplexity = np.inf
@@ -207,8 +205,7 @@ def train(args):
             if val_perplexity < best_val_perplexity :
                 best_val_perplexity = val_perplexity
                 #save
-                sv.saver.save(session, args.save, global_step=sv.global_step)
-                #TODO
+                saver_save.save(session, args.save, global_step=global_step)
 
 def test(args):
     test_data = reader.data(data_dir=args.data_dir, 
@@ -220,6 +217,7 @@ def test(args):
     input_data = tf.placeholder(tf.int32, [None, None])
     targets    = tf.placeholder(tf.int32, [None, None])
     learning_rate_op = tf.placeholder(tf.float32, [])
+    dropout = tf.placeholder(tf.float32)
     #build model
     vocab_size=test_data.vocab_size
     predict, pretrain_param, output_linear_param = model.inference(input_data, 
@@ -237,7 +235,6 @@ def test(args):
               'train_op':train_op}
 
     #load model
-    saver = tf.train.Saver()
     init = tf.initialize_all_variables()
     with tf.Session() as sess:
         sess.run(init)
@@ -246,15 +243,6 @@ def test(args):
         test_perplexity = evaluating(sess, all_op, test_data)
         print ("Testing Perplexity: %.3f" % (test_perplexity))
 
-
-
-
-
-
-
-
-
-#read data
 if __name__ == "__main__":
     args = parsing_args()
     if args.mode == 'train':
