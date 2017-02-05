@@ -75,6 +75,26 @@ class data:
             print "shuffling data..."
             self.x, self.y, self.nstep = self.generate_batch(self.batch_size, self.all_tensor_data)
 
+    def generate_word_embedding_matrix(path):
+        """
+        generate vocab lookup embedding matrix from pretrained word2vector
+        args:
+            vocab_to_id:
+            path: model path
+        return:
+            embedding_matrix: pretrained word embedding matrix
+        """
+        model = gensim.models.Word2Vec.load_word2vec_format(path, binary=True)
+        all_vocab_vector = []
+        for word, idx in self.vocab_to_id:
+            try:
+                word_vector = model[word]
+            except:
+                word_vector = np.random.uniform(-1/np.sqrt(300),1/np.sqrt(300),[300])
+            all_vocab_vector.append(word_vector)
+
+        embedding_matrix = np.concatenate(all_vocab_vector,axis=0)
+        return embedding_matrix
     """ -------STATIC METHOD------- """     
     def establish_vocab():
         print('loading train text file...')
@@ -179,26 +199,5 @@ class data:
         num = len(all_shuffle_batch)
 
         return x, y, num
-
-    def generate_word_embedding_matrix(vocab_to_id, path):
-        """
-        generate vocab lookup embedding matrix from pretrained word2vector
-        args:
-            vocab_to_id:
-            path: model path
-        return:
-            embedding_matrix: pretrained word embedding matrix
-        """
-        model = gensim.models.Word2Vec.load_word2vec_format(path, binary=True)
-        all_vocab_vector = []
-        for word, idx in vocab_to_id:
-            try:
-                word_vector = model[word]
-            except:
-                word_vector = np.zeros([300],dtype='float32')
-            all_vocab_vector.append(word_vector)
-
-        embedding_matrix = np.concatenate9all_vocab_vector,axis=0)
-        return embedding_matrix
 
 
