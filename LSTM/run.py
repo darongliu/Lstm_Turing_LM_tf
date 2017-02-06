@@ -11,20 +11,18 @@ def parsing_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, default='train',
                         help='train or test')
-    parser.add_argument('--init_from', type=str, default='',
+    parser.add_argument('--init_from', type=str, default=None,
                         help='init model path')
-    parser.add_argument('--init_method', type=str, default='lstm',
+    parser.add_argument('--init_method', type=str, default=None,
                         help='lstm/att init from lstm or full model')
-    parser.add_argument('--word_vector_path', type=str, default='',
+    parser.add_argument('--word_vector_path', type=str, default=None,
                         help='pretrain word2vector model')
 
-    parser.add_argument('--data_dir', type=str, default='data/',
+    parser.add_argument('--data_dir', type=str, default=None,
                         help='data directory containing train valid test data')
-    parser.add_argument('--save', type=str, default='save',
+    parser.add_argument('--save', type=str, default=None,
                         help='directory to store checkpointed models')
-    parser.add_argument('--load', type=str, default=None,
-                        help="continue training from saved model at this path. Path must contain files saved by previous training process")
-    parser.add_argument('--att_file', type=str, default='save',
+    parser.add_argument('--att_file', type=str, default=None,
                         help='file storing attention weights for analysis')
 
     parser.add_argument('--rnn_size', type=int, default=300,
@@ -36,14 +34,14 @@ def parsing_args():
 
     parser.add_argument('--batch_size', type=int, default=20,
                         help='minibatch size')
-    parser.add_argument('--max_seq_length', type=int, default=40,
+    parser.add_argument('--max_seq_length', type=int, default=60,
                         help='max number of timesteps to unroll during BPTT')
-    parser.add_argument('--min_seq_length', type=int, default=15,
+    parser.add_argument('--min_seq_length', type=int, default=0,
                         help='min number of timesteps to unroll during BPTT')
 
     parser.add_argument('--max_epochs', type=int, default=50,
     help='number of full passes through the training data')
-    parser.add_argument('--dropout', type=int, default=0,
+    parser.add_argument('--dropout', type=int, default=1,
                         help='dropout for regularization, neuron keep probabitity. 1 = no dropout')
     parser.add_argument('--max_grad_norm', type=float, default=5.,
                         help='clip gradients at this value')
@@ -54,15 +52,13 @@ def parsing_args():
                         help='learning rate')
     parser.add_argument('--decay_rate', type=float, default=0.5,
                         help='decay rate')
-    parser.add_argument('--learning_rate_decay_after', type=int, default=4,
+    parser.add_argument('--learning_rate_decay_after', type=int, default=10,
                         help='in number of epochs, when to start decaying the learning rate')
 
-    parser.add_argument('--gpu_id', type=float, default=0.666,
+    parser.add_argument('--gpu_id', type=float, default=0,
                         help='% of gpu memory to be allocated to this process. Default is 66.6%')
     parser.add_argument('--print_every', type=int, default=200,
                         help='how many steps/minibatches between printing out the loss')
-    parser.add_argument('--seed', type=int, default=40,
-                        help='random number generator seed')
 
     args = parser.parse_args()
     return args
