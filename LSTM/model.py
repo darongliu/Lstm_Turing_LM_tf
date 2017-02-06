@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy
 
-def inference(input_x, embedding_dim, lstm_hidden_dim_1, lstm_hidden_dim_2=None, vocab_size, dropout=None) :
+def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
+    lstm_hidden_dim_2=None, dropout=None) :
     """
     Args:
         input_x: 2D tensor batch_size X time_step

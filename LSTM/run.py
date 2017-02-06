@@ -41,7 +41,7 @@ def parsing_args():
 
     parser.add_argument('--max_epochs', type=int, default=50,
     help='number of full passes through the training data')
-    parser.add_argument('--dropout', type=int, default=1,
+    parser.add_argument('--dropout', type=float, default=1,
                         help='dropout for regularization, neuron keep probabitity. 1 = no dropout')
     parser.add_argument('--max_grad_norm', type=float, default=5.,
                         help='clip gradients at this value')
@@ -128,24 +128,24 @@ def train(args):
                              batch_size=args.batch_size, 
                              min_seq_length=args.min_seq_length, 
                              max_seq_length=args.max_seq_length,
-                             min_count=args.min_count)
+                             min_count=0)
     train_data.load('train')
     valid_data = reader.data(data_dir=args.data_dir, 
                              batch_size=args.batch_size, 
                              min_seq_length=args.min_seq_length, 
                              max_seq_length=args.max_seq_length,
-                             min_count=args.min_count)
+                             min_count=0)
     valid_data.load('valid')
     test_data = reader.data(data_dir=args.data_dir, 
                              batch_size=args.batch_size, 
                              min_seq_length=args.min_seq_length, 
                              max_seq_length=args.max_seq_length,
-                             min_count=args.min_count)
+                             min_count=0)
     test_data.load('test')
 
     #load model
     if args.init_from:
-        if is not os.path.isfile(args.init_from):
+        if not os.path.isfile(args.init_from):
             print 'init file not found'
             os.exit()
 
@@ -158,8 +158,8 @@ def train(args):
     #build model
     vocab_size=train_data.vocab_size
     logits, pretrain_list, output_linear_list = model.inference(input_x=input_data_ph, 
-                                                    embedding_dim=args.emb_size
-                                                    lstm_hidden_dim_1=args.rnn_size
+                                                    embedding_dim=args.emb_size,
+                                                    lstm_hidden_dim_1=args.rnn_size,
                                                     vocab_size=vocab_size,
                                                     dropout=dropout_ph)
 
@@ -228,7 +228,7 @@ def test(args):
 
     #load model
     if args.init_from:
-        if is not os.path.isfile(args.init_from):
+        if not os.path.isfile(args.init_from):
             print 'init file not found'
             os.exit()
 
@@ -241,8 +241,8 @@ def test(args):
     #build model
     vocab_size=train_data.vocab_size
     logits, pretrain_list, output_linear_list = model.inference(input_x=input_data_ph, 
-                                                    embedding_dim=args.emb_size
-                                                    lstm_hidden_dim_1=args.rnn_size
+                                                    embedding_dim=args.emb_size,
+                                                    lstm_hidden_dim_1=args.rnn_size,
                                                     vocab_size=vocab_size,
                                                     dropout=dropout_ph)
 
