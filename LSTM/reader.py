@@ -87,16 +87,17 @@ class data:
         return:
             embedding_matrix: pretrained word embedding matrix
         """
+        print 'generating word embedding matrix'
         model = gensim.models.Word2Vec.load_word2vec_format(path, binary=True)
         all_vocab_vector = []
-        for word, idx in self.vocab_to_id:
+        embedding_matrix = np.zeros([self.vocab_size,300],dtype='float')
+        for word, idx in self.vocab_to_id.iteritems():
             try:
                 word_vector = model[word]
             except:
                 word_vector = np.random.uniform(-1/np.sqrt(300),1/np.sqrt(300),[300])
-            all_vocab_vector.append(word_vector)
+            embedding_matrix[idx] = word_vector
 
-        embedding_matrix = np.concatenate(all_vocab_vector,axis=0)
         return embedding_matrix
     """ -------STATIC METHOD------- """     
     def establish_vocab(self):
@@ -190,8 +191,8 @@ class data:
         """
         all_data = {}
         for length, tensor in all_tensor_data.iteritems():
-            all_data[length] = np.random.shuffle(all_tensor_data[length])
-            all_data[length]
+            all_data[length] = tensor
+            np.random.shuffle(all_data[length])
 
         all_batch = []
         for length, tensor in all_data.iteritems():
@@ -202,7 +203,8 @@ class data:
                 all_batch.append(all_data[length][i*batch_size:(i+1)*batch_size,:])
             if remaining :
                 all_batch.append(all_data[length][batch_num*batch_size:,:])
-        all_shuffle_batch = shuffle(all_batch)
+        all_shuffle_batch = all_batch
+        shuffle(all_shuffle_batch)
 
         x = [tensor[:,:-1] for tensor in all_shuffle_batch]
         y = [tensor[:,1:]  for tensor in all_shuffle_batch]

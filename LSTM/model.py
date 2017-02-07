@@ -34,11 +34,17 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
     #lstm1 layer
     with tf.name_scope('recurrent_layer1'):
         cell = tf.nn.rnn_cell.LSTMCell(lstm_hidden_dim_1, state_is_tuple=True)
-        if dropout:
+        if dropout is not None:
             cell = tf.nn.rnn_cell.DropoutWrapper(cell, input_keep_prob=dropout, output_keep_prob=dropout)
-        initial_state_vector = tf.get_variable('initial_state_vector', [1, lstm_hidden_dim_1])
-
-        initial_state = tf.tile(initial_state_vector, [tf.shape(input_x)[0], 1])
+        
+        initial_state_c = tf.get_variable('initial_state_c', [1, lstm_hidden_dim_1])
+        initial_state_h = tf.get_variable('initial_state_h', [1, lstm_hidden_dim_1])
+        initial_state_c_batch = tf.tile(initial_state_c, [tf.shape(input_x)[0], 1])
+        initial_state_h_batch = tf.tile(initial_state_h, [tf.shape(input_x)[0], 1])
+        initial_state = tf.nn.rnn_cell.LSTMStateTuple(initial_state_c_batch, initial_state_h_batch)
+        """
+        initial_state = cell.zero_state(tf.shape(input_x)[0], tf.float32)
+        """
         lstm1_outputs, final_state = tf.nn.dynamic_rnn(cell, input_emb, initial_state=initial_state)
         #lstm1_outputs: [batch_size, num_steps, state_size]
 
@@ -52,7 +58,10 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
         W = tf.get_variable('W', [lstm_hidden_dim_1, vocab_size])
         b = tf.get_variable('b', [vocab_size], initializer=tf.constant_initializer(0.0))
 
-        logits = tf.matmul(att_lstm_outputs, W) + b
+        recurrent_outputs = tf.reshape(lstm1_outputs,[-1,lstm_hidden_dim_1])
+        logits = tf.matmul(recurrent_outputs, W) + b
+        logits = tf.reshape(logits, [tf.shape(input_x)[0], tf.shape(input_x)[1],
+            vocab_size])
 
     #dropout, pretrain
     #add pretrain_param, output_linear_param
@@ -74,7 +83,7 @@ def loss(logits, labels, entropy=None, entropy_reg=0) :
     total_label_loss = tf.reduce_sum(cross_entropy_result)
     #devide vocab size
     loss = tf.reduce_mean(cross_entropy_result)
-    if entropy :
+    if entropy is not None:
         loss = loss + entropy_reg*entropy
 
     return total_label_loss, loss
@@ -89,8 +98,6 @@ def training(loss, learning_rate, grad_norm) :
     return :
         train_op
     """
-    # Add a scalar summary for the snapshot loss.
-    tf.summary.scalar('loss', loss)
     # Create the gradient descent optimizer with the given learning rate.
     optimizer = tf.train.AdamOptimizer(learning_rate)
     gvs = optimizer.compute_gradients(loss)

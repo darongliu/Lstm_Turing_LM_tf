@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 import reader
-from model import *
+import model
 
 def parsing_args():
     parser = argparse.ArgumentParser()
@@ -87,10 +87,10 @@ def run_epoch_training(sess, all_op, data, lr, dropout):
         total_cost += result['total_label_loss']
         total_words_num += x.size
 
-        print idx+1, '/', nbatch, ': ', 'perplexity: ', np.exp(result['total_label_loss']/x.size)
+        print (idx+1), '/', nbatch, ': ', 'perplexity: ', np.exp(result['total_label_loss']/x.size)
 
     total_perplexity = np.exp(total_cost/total_words_num)
-    print 'training perplexity in this epoch: ', total_perplexity
+    print 'training perplexity in this epoch: ' , total_perplexity
     print 'epoch training time: ', (time.time() - start_time)
 
     return total_perplexity
