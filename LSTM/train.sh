@@ -14,14 +14,14 @@ num_layers=1
 
 batch_size=20
 max_seq_length=60
-min_seq_length=0
+min_seq_length=3
 
 max_epochs=1000
 dropout=0.7
 max_grad_norm=5
 #entropy_reg
 
-learning_rate=1
+learning_rate=0.01
 decay_rate=1
 learning_rate_decay_after=1000
 

@@ -178,9 +178,9 @@ def train(args):
         emb_matrix = pretrain_list[0]
         pretrain_emb = emb_matrix.assign(train_data.generate_word_embedding_matrix(args.word_vector_path))
 
+    global_step = tf.Variable(0,name='global_step',trainable=False)
     init = tf.initialize_all_variables()
     saver_save = tf.train.Saver()
-    global_step = tf.Variable(0,name='global_step',trainable=False)
 
     with tf.Session() as sess:
         sess.run(init)
@@ -213,7 +213,7 @@ def train(args):
             if val_perplexity < best_val_perplexity :
                 best_val_perplexity = val_perplexity
                 #save
-                saver_save.save(session, args.save, global_step=global_step)
+                saver_save.save(sess, args.save, global_step=global_step)
 
 def test(args):
     test_data = reader.data(data_dir=args.data_dir, 
