@@ -20,8 +20,7 @@ class data:
         self.train_file = os.path.join(data_dir, 'train.txt' )
         self.valid_file = os.path.join(data_dir, 'valid.txt' )
         self.test_file  = os.path.join(data_dir, 'test.txt'  )
-        self.vocab_file = os.path.join(data_dir,
-            'data.vocab_min'+str(min_seq_length)+'max'+str(max_seq_length))
+        self.vocab_file = os.path.join(data_dir, 'data.vocab_min'+str(min_seq_length)+'max'+str(max_seq_length))
 
         self.batch_size = batch_size
         self.min_count  = min_count
@@ -76,9 +75,9 @@ class data:
             print "still not load data..."
         else :
             print "shuffling data..."
-            self.x, self.y, self.nstep = self.generate_batch(self.batch_size, self.all_tensor_data)
+            self.x, self.y, self.nbatch = self.generate_batch(self.batch_size, self.all_tensor_data)
 
-    def generate_word_embedding_matrix(self,path):
+    def generate_word_embedding_matrix(self, path):
         """
         generate vocab lookup embedding matrix from pretrained word2vector
         args:
@@ -89,7 +88,6 @@ class data:
         """
         print 'generating word embedding matrix'
         model = gensim.models.Word2Vec.load_word2vec_format(path, binary=True)
-        all_vocab_vector = []
         embedding_matrix = np.zeros([self.vocab_size,300],dtype='float')
         for word, idx in self.vocab_to_id.iteritems():
             try:
@@ -114,7 +112,7 @@ class data:
 
         print 'finish processing sentence'
         print 'all sentences: ', len(train_data), ' suitable sentences: ', count
-        print('creating vocabulary mapping...')
+        print 'creating vocabulary mapping...'
         vocab_to_id = {}
         counter = collections.Counter(all_words) #counter: dict {vocab:times}
         count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0])) #sort by ascending
@@ -157,7 +155,7 @@ class data:
                     buckets[length] = 1
         return buckets
 
-    def text_to_tensor(self,buckets, vocab_to_id, min_length, max_length, data) :
+    def text_to_tensor(self, buckets, vocab_to_id, min_length, max_length, data) :
         """
         transform text data to tensor format
         all_data: dict {length: the tensor of the length}

@@ -116,10 +116,7 @@ def evaluating(sess, all_op, data):
         total_cost += result['total_label_loss']
         total_words_num += x.size
 
-    total_perplexity = np.exp(total_cost/total_words_num)
-
-    print 'Validation perplexity in this epoch: ', total_perplexity
-
+    total_perplexity = np.exp(total_cost/total_words_num)    
     return total_perplexity
 
 def train(args):
@@ -239,7 +236,7 @@ def test(args):
     dropout_ph       = tf.placeholder(tf.float32, [])
 
     #build model
-    vocab_size=train_data.vocab_size
+    vocab_size=test_data.vocab_size
     logits, pretrain_list, output_linear_list = model.inference(input_x=input_data_ph, 
                                                     embedding_dim=args.emb_size,
                                                     lstm_hidden_dim_1=args.rnn_size,
@@ -254,11 +251,14 @@ def test(args):
               'dropout':dropout_ph,
               'total_label_loss':total_label_loss}
 
+    #pretrain
+    if args.init_from:
+        saver_restore = tf.train.Saver()
     #load model
     init = tf.initialize_all_variables()
     with tf.Session() as sess:
         sess.run(init)
-        saver.restore(sess, args.init_from)
+        saver_restore.restore(sess, args.init_from)
 
         test_perplexity = evaluating(sess, all_op, test_data)
         print ("Testing Perplexity: %.3f" % (test_perplexity))

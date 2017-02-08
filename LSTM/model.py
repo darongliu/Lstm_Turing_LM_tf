@@ -1,8 +1,7 @@
 import tensorflow as tf
 import numpy
 
-def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
-    lstm_hidden_dim_2=None, dropout=None) :
+def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size, lstm_hidden_dim_2=None, dropout=None) :
     """
     Args:
         input_x: 2D tensor batch_size X time_step
@@ -60,8 +59,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
         recurrent_outputs = tf.reshape(lstm1_outputs,[-1,lstm_hidden_dim_1])
         logits = tf.matmul(recurrent_outputs, W) + b
-        logits = tf.reshape(logits, [tf.shape(input_x)[0], tf.shape(input_x)[1],
-            vocab_size])
+        logits = tf.reshape(logits, [tf.shape(input_x)[0], tf.shape(input_x)[1], vocab_size])
 
     #dropout, pretrain
     #add pretrain_param, output_linear_param
