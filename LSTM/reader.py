@@ -134,9 +134,9 @@ class data:
     def read_data(self,filename):
         with open(filename, "r") as f:
             content = f.readlines()
-        return content
+        #return content
         #add <s> and </s> at both end of the sentences
-        #return ["<s> "+line+" </s>" for line in content]
+        return ["<s> "+line+" </s>" for line in content]
 
     def create_buckets(self, min_length, max_length, data) :
         """

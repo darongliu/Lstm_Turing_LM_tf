@@ -50,6 +50,8 @@ def parsing_args():
 
     parser.add_argument('--learning_rate', type=float, default=1.0,
                         help='learning rate')
+    parser.add_argument('--init_scale', type=float, default=0.1,
+                        help='initialization scale')
     parser.add_argument('--decay_rate', type=float, default=0.5,
                         help='decay rate')
     parser.add_argument('--learning_rate_decay_after', type=int, default=10,
@@ -63,7 +65,7 @@ def parsing_args():
     args = parser.parse_args()
     return args
     
-def run_epoch_training(sess, all_op, data, lr, dropout):
+def run_epoch_training(sess, all_op, data, lr, dropout, print_every):
     start_time = time.time()
     nbatch = data.get_batch_number()
     total_words_num = 0
@@ -87,7 +89,8 @@ def run_epoch_training(sess, all_op, data, lr, dropout):
         total_cost += result['total_label_loss']
         total_words_num += x.size
 
-        print (idx+1), '/', nbatch, ': ', 'perplexity: ', np.exp(result['total_label_loss']/x.size)
+        if (idx+1)%print_every == 0:
+            print (idx+1), '/', nbatch, ': ', 'perplexity: ', np.exp(result['total_label_loss']/x.size)
 
     total_perplexity = np.exp(total_cost/total_words_num)
     print 'training perplexity in this epoch: ' , total_perplexity
@@ -154,7 +157,11 @@ def train(args):
 
     #build model
     vocab_size=train_data.vocab_size
-    logits, pretrain_list, output_linear_list = model.inference(input_x=input_data_ph, 
+    default_initializer = tf.random_uniform_initializer(-args.init_scale,
+        args.init_scale)
+    with tf.variable_scope('model',initializer=default_initializer):
+        logits, pretrain_list, output_linear_list = model.inference(
+                                                    input_x=input_data_ph, 
                                                     embedding_dim=args.emb_size,
                                                     lstm_hidden_dim_1=args.rnn_size,
                                                     vocab_size=vocab_size,
@@ -199,9 +206,13 @@ def train(args):
             print("Epoch: %d Learning rate: %.3f" % (i + 1, learning_rate))
 
             #training
-            training_perplexity = run_epoch_training(sess, all_op, train_data, learning_rate, args.dropout)
+            training_perplexity = run_epoch_training(sess, all_op, train_data,
+                learning_rate, args.dropout, args.print_every)
             print("Epoch: %d Train Perplexity: %.3f" % (i + 1, training_perplexity))
 
+            test_training_perplexity = evaluating(sess, all_op, train_data)
+            print("Epoch: %d test training Perplexity: %.3f" % (i + 1,
+                test_training_perplexity))
             #validation
             val_perplexity = evaluating(sess, all_op, valid_data)
             print("Epoch: %d validation Perplexity: %.3f" % (i + 1, val_perplexity))
