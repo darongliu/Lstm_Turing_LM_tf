@@ -199,6 +199,7 @@ def train(args):
 
         #training
         best_val_perplexity = np.inf
+        best_val_test_perplexity = np.inf
 
         for i in range(args.max_epochs):
             lr_decay = args.decay_rate ** max(i + 1 - args.learning_rate_decay_after, 0.0)
@@ -223,8 +224,10 @@ def train(args):
 
             if val_perplexity < best_val_perplexity :
                 best_val_perplexity = val_perplexity
+                best_val_test_perplexity = test_perplexity
                 #save
                 saver_save.save(sess, args.save, global_step=global_step)
+            print("So far best val testing Perplexity: %.3f" % (best_val_test_perplexity))
 
 def test(args):
     test_data = reader.data(data_dir=args.data_dir, 
