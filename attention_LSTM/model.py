@@ -55,7 +55,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
     with tf.variable_scope('attention_layer'):
         initial_state = tf.zeros([tf.shape(input_x)[0],1,lstm_hidden_dim_1])
-        memory = tf.concat([initial_state,lstm1_outputs],1)
+        memory = tf.concat(1,[initial_state,lstm1_outputs])
         #memory: [batch_size, num_steps, state_size]
         W_key = tf.get_variable('W_key', [lstm_hidden_dim_1, lstm_hidden_dim_1])
         b_key = tf.get_variable('b_key', [lstm_hidden_dim_1], initializer=tf.constant_initializer(0.0))
@@ -66,8 +66,13 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
                 -: dummy input(for the reinput of the output)
                 time_step: from 0 to the last time step
             """
+            """
             current_hidden = memory[:,time_step+1,:]
             previous_hidden = memory[:,:time_step+1,:]
+            """
+            current_hidden = tf.slice(memory, [0,time_step+1,0], [-1,1,-1])
+            current_hidden = tf.squeeze(current_hidden, [1])
+            previous_hidden = tf.slice(memory, [0,0,0], [-1,time_step+1,-1])
             #previous_hidden: [batch_size, num_steps, state_size]
 
             key = tf.matmul(current_hidden,W_key) + b_key
@@ -85,14 +90,15 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
             return attention
 
-        time_step_sequence = tf.range(0,tf.shape(input_x)[2])
+        time_step_sequence = tf.range(tf.shape(input_x)[1])
+        #time_step_sequence = tf.to_int32(time_step_sequence)
         initializer = tf.zeros([tf.shape(input_x)[0], lstm_hidden_dim_1])
 
-        att_outputs = tf.scan(step,time_step_sequence, initializer=initializer)
-        att_outputs = tf.reshape(att_outputs,[tf.shape(input_x)[0],tf.shape(input_x)[1],lstm_hidden_dim_1])
+        att_outputs = tf.scan(step, time_step_sequence, initializer=initializer)
+        att_outputs = tf.transpose(att_outputs, [1,0,2])
 
     with tf.variable_scope('merge_layer'):
-        att_lstm_outputs = tf.concat([lstm1_outputs,att_outputs],2)
+        att_lstm_outputs = tf.concat(2,[lstm1_outputs,att_outputs])
 
     #output layer which is attached after lstm1 
     with tf.variable_scope('output_lstm1_att_linear'):
