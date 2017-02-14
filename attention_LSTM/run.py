@@ -7,6 +7,9 @@ import tensorflow as tf
 import reader
 import model
 
+import pickle
+import os
+
 def parsing_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, default='train',
@@ -22,6 +25,8 @@ def parsing_args():
                         help='data directory containing train valid test data')
     parser.add_argument('--save', type=str, default=None,
                         help='directory to store checkpointed models')
+    parser.add_argument('--model_result', type=str, default=None,
+                        help='save model result')
     parser.add_argument('--att_file', type=str, default=None,
                         help='file storing attention weights for analysis')
 
@@ -199,6 +204,9 @@ def train(args):
     init = tf.initialize_all_variables()
     saver_save = tf.train.Saver()
 
+    training_process_perplexity = {'train':[],'valid':[],'test':[],'best_val_test':[]}
+    file_name = 'rnn_size' + str(args.rnn_size)
+
     with tf.Session() as sess:
         sess.run(init)
         #pretrain word embedding
@@ -241,8 +249,15 @@ def train(args):
                 best_val_perplexity = val_perplexity
                 best_val_test_perplexity = test_perplexity
                 #save
-                saver_save.save(sess, args.save, global_step=global_step)
+                saver_save.save(sess, os.path.join(args.save,file_name), global_step=global_step)
             print("So far best val testing Perplexity: %.3f" % (best_val_test_perplexity))
+
+            training_process_perplexity['train'].append(test_training_perplexity)
+            training_process_perplexity['valid'].append(val_perplexity)
+            training_process_perplexity['test'].append(test_perplexity)
+            training_process_perplexity['best_val_test'].append(best_val_test_perplexity)
+        with open(os.path.join('args.model_result',file_name),'wb') as f:
+            pickle.dump(training_process_perplexity, f)
 
 def test(args):
     test_data = reader.data(data_dir=args.data_dir, 

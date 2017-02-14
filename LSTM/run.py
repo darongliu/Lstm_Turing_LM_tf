@@ -195,7 +195,7 @@ def train(args):
     saver_save = tf.train.Saver()
 
     training_process_perplexity = {'train':[],'valid':[],'test':[],'best_val_test':[]}
-    file_name = 'rnn_size' + str(args.rnn_size) + ''
+    file_name = 'rnn_size' + str(args.rnn_size)
 
     with tf.Session() as sess:
         sess.run(init)
@@ -236,12 +236,13 @@ def train(args):
                 #save
                 saver_save.save(sess, os.path.join(args.save,file_name), global_step=global_step)
             print("So far best val testing Perplexity: %.3f" % (best_val_test_perplexity))
+
             training_process_perplexity['train'].append(test_training_perplexity)
             training_process_perplexity['valid'].append(val_perplexity)
             training_process_perplexity['test'].append(test_perplexity)
             training_process_perplexity['best_val_test'].append(best_val_test_perplexity)
-        with open('args.model_result','wb') as f:
-            pickle.dump(os.path.join(training_process_perplexity,file_name),f)
+        with open(os.path.join('args.model_result',file_name),'wb') as f:
+            pickle.dump(training_process_perplexity, f)
 
 def test(args):
     test_data = reader.data(data_dir=args.data_dir, 
