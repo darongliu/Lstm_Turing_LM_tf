@@ -241,7 +241,7 @@ def train(args):
             training_process_perplexity['valid'].append(val_perplexity)
             training_process_perplexity['test'].append(test_perplexity)
             training_process_perplexity['best_val_test'].append(best_val_test_perplexity)
-        with open(os.path.join('args.model_result',file_name),'wb') as f:
+        with open(os.path.join(args.model_result,file_name),'wb') as f:
             pickle.dump(training_process_perplexity, f)
 
 def test(args):

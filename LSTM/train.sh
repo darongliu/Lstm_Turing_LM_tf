@@ -17,14 +17,14 @@ batch_size=20
 max_seq_length=60
 min_seq_length=3
 
-max_epochs=30
+max_epochs=50
 dropout=0.8
 max_grad_norm=5
 #entropy_reg
 
 learning_rate=1
 decay_rate=0.8
-learning_rate_decay_after=15
+learning_rate_decay_after=30
 
 #gpu_id
 print_every=100
