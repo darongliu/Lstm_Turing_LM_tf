@@ -188,13 +188,14 @@ def train(args):
     #pretrain
     if args.init_from:
         if args.init_method == 'lstm':
-            with tf.variable_scope('output_lstm1_linear'):
-                lstm_linear_W = tf.get_variable('W', [args.rnn_size, vocab_size])
-                lstm_linear_b = tf.get_variable('b', [vocab_size], initializer=tf.constant_initializer(0.0))
-            pretrain_param += [lstm_linear_W,lstm_linear_b]
+            with tf.variable_scope('model'):
+                with tf.variable_scope('output_lstm1_linear'):
+                    lstm_linear_W = tf.get_variable('W', [args.rnn_size, vocab_size])
+                    lstm_linear_b = tf.get_variable('b', [vocab_size], initializer=tf.constant_initializer(0.0))
+            pretrain_list += [lstm_linear_W,lstm_linear_b]
             init_att_W = output_linear_list[0].assign(tf.concat(0,[lstm_linear_W,lstm_linear_W]))
             init_att_b = output_linear_list[1].assign(lstm_linear_b)
-            saver_restore = tf.train.Saver(pretrain_param)
+            saver_restore = tf.train.Saver(pretrain_list)
         else:
             saver_restore = tf.train.Saver()
 

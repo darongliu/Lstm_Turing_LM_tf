@@ -98,6 +98,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
         att_outputs = tf.scan(step, time_step_sequence, initializer=initializer)
         att_outputs = tf.transpose(att_outputs, [1,0,2])
+        att_outputs = tf.nn.dropout(att_outputs, dropout)
 
     with tf.variable_scope('merge_layer'):
         att_lstm_outputs = tf.concat(2,[lstm1_outputs,att_outputs])
