@@ -215,8 +215,8 @@ def train(args):
         if args.init_from:
             if args.init_method == 'lstm':
                 saver_restore.restore(sess, args.init_from)
-                sess.rum(init_att_W)
-                sess.rum(init_att_b)
+                sess.run(init_att_W)
+                sess.run(init_att_b)
             else:
                 saver_restore.restore(sess, args.init_from)
 
