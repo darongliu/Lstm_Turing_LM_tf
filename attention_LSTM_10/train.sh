@@ -18,11 +18,11 @@ max_seq_length=60
 min_seq_length=3
 
 max_epochs=40
-dropout=0.8
+dropout=0.7
 max_grad_norm=5
 #entropy_reg
 
-learning_rate=1
+learning_rate=0.1
 decay_rate=0.8
 learning_rate_decay_after=25
 init_scale=0.1
