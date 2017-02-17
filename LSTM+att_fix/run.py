@@ -228,7 +228,13 @@ def train(args):
         best_val_perplexity = np.inf
         best_val_test_perplexity = np.inf
 
+        #learning_rate = args.learning_rate
+        #last_training_perplexity = np.inf
+        #test_training_perplexity = np.inf
         for i in range(args.max_epochs):
+            #if last_training_perplexity < test_training_perplexity:
+                #learning_rate = learning_rate*args.decay_rate
+            #last_training_perplexity = test_training_perplexity
             lr_decay = args.decay_rate ** max(i + 1 - args.learning_rate_decay_after, 0.0)
             learning_rate = args.learning_rate * lr_decay
             print("Epoch: %d Learning rate: %.3f" % (i + 1, learning_rate))
