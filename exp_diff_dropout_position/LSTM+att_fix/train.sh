@@ -12,20 +12,20 @@ model_result='./result'
 rnn_size=300
 emb_size=300
 num_layers=1
-window_size=3
+window_size=15
 
 batch_size=20
 max_seq_length=60
 min_seq_length=3
 
-max_epochs=50
+max_epochs=60
 dropout=0.6
 max_grad_norm=5
 #entropy_reg
 
 learning_rate=1
 decay_rate=0.8
-learning_rate_decay_after=30
+learning_rate_decay_after=40
 init_scale=0.1
 
 gpu_id=1

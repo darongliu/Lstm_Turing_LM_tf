@@ -91,9 +91,9 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
             #entropy
             log_weight = tf.log(weight)
-            entropy = tf.reduce_sum(-1*tf.mul(weight,log_weight),axis=1)
+            entropy = tf.reduce_sum(-1*tf.mul(weight,log_weight),1)
 
-            return attention, entropy
+            return [attention, entropy]
 
         time_step_sequence = tf.range(tf.shape(input_x)[1])
         #time_step_sequence = tf.to_int32(time_step_sequence)

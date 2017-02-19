@@ -74,6 +74,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
             key = tf.matmul(current_hidden,W_key) + b_key
             key = tf.tanh(key)
+            key = tf.nn.dropout(key, dropout)
             #key: [batch_size, state_size]
 
             key_as_matrix = tf.expand_dims(key,2)

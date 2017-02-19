@@ -96,6 +96,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
 
         att_outputs = tf.scan(step, time_step_sequence, initializer=initializer)
         att_outputs = tf.transpose(att_outputs, [1,0,2])
+        att_outputs = tf.nn.dropout(att_outputs , dropout)
 
     with tf.variable_scope('merge_layer'):
         W_project = tf.get_variable('W_project', [lstm_hidden_dim_1, lstm_hidden_dim_1])
@@ -106,8 +107,8 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
         att_outputs = tf.matmul(temp, W_project) + b_project
         att_outputs = tf.tanh(tf.reshape(att_outputs, [tf.shape(input_x)[0], tf.shape(input_x)[1], lstm_hidden_dim_1]))
         att_outputs  = tf.nn.dropout(att_outputs , dropout)
-        lstm1_output = tf.nn.dropout(lstm1_output, dropout)
-        att_lstm_outputs = alpha*att_outputs + (1-alpha)*lstm1_output
+        lstm1_outputs = tf.nn.dropout(lstm1_outputs, dropout)
+        att_lstm_outputs = alpha*att_outputs + (1-alpha)*lstm1_outputs
 
     #output layer which is attached after lstm1 
     with tf.variable_scope('output_lstm1_att_linear'):
