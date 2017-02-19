@@ -1,10 +1,10 @@
 #! /bin/bash
 mode='train'
-init_from='../LSTM/model/rnn_size300-0'
+init_from='../../../LSTM/model/rnn_size300-0'
 init_method='lstm'
-word_vector_path='../data/word2vec/GoogleNews-vectors-negative300.bin'
+word_vector_path='../../../data/word2vec/GoogleNews-vectors-negative300.bin'
 
-data_dir='../data/PTB_data'
+data_dir='../../../data/PTB_data'
 save='./model/'
 model_result='./result'
 #att_file
