@@ -90,7 +90,7 @@ def inference(input_x, embedding_dim, lstm_hidden_dim_1, vocab_size,
             attention = tf.squeeze(attention,[1])
 
             #entropy
-            log_weight = tf.log(weight)
+            log_weight = tf.log(weight + 1e-10)
             entropy = tf.reduce_sum(-1*tf.mul(weight,log_weight),1)
 
             return [attention, entropy]
